@@ -3,974 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Ectopian Master Archive</title>
+    <title>METEO-SCAN // TERMINAL_v4.04</title>
     <style>
         :root {
-            --bg-color: #030305;
-            --text-color: #f0f0f0;
-            --accent-color: #ff3366;
-            --accent-hover: #ff6699;
-            --card-bg: #111118;
-            --border-color: #2a2a35;
+            --glow-color: #00ff66;
+            --bg-color: #050505;
+            --panel-bg: #0a0f0a;
+            --text-muted: #00aa44;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
+            font-family: 'Courier New', Courier, monospace;
         }
-        header {
-            background-color: var(--card-bg);
-            padding: 3rem 2rem;
-            text-align: center;
-            border-bottom: 2px solid var(--accent-color);
-            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.2);
-        }
-        h1 {
-            margin: 0;
-            color: var(--accent-color);
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-size: 2.5rem;
-        }
-        .stats {
-            color: #888;
-            font-style: italic;
-            font-size: 1.1rem;
-            margin-top: 10px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 3rem auto;
-            padding: 0 2rem;
-        }
-        .section {
-            background-color: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 12px;
-            margin-bottom: 3rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-        }
-        h2 {
-            color: var(--accent-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-            margin-top: 0;
-        }
-        .search-container {
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--glow-color);
+            padding: 20px;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+        }
+
+        /* Scanline overlay effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 99999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 2px solid var(--glow-color);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        header {
+            border-bottom: 2px dashed var(--glow-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            animation: blink 1.5s infinite;
+        }
+
+        .system-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
             gap: 15px;
-            margin-top: 1.5rem;
         }
-        input[type="text"] {
-            flex: 1;
+
+        .panel-box {
+            border: 1px solid var(--text-muted);
             padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: #1a1a24;
-            color: white;
-            font-size: 1.2rem;
+            background: rgba(0, 20, 5, 0.3);
+            border-radius: 4px;
         }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-color);
+
+        .panel-box h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-transform: uppercase;
         }
-        button {
-            padding: 15px 30px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
+
+        .btn {
+            background: transparent;
+            color: var(--glow-color);
+            border: 1px solid var(--glow-color);
+            padding: 10px 15px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1.1rem;
-            transition: background-color 0.3s;
+            width: 100%;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 5px rgba(0, 255, 102, 0.2);
         }
-        button:hover {
-            background-color: var(--accent-hover);
+
+        .btn:hover {
+            background: var(--glow-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--glow-color);
         }
-        #results {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background-color: #1a1a24;
-            border-radius: 6px;
-            font-size: 1.2rem;
-            display: none;
-            border-left: 4px solid var(--accent-color);
+
+        .input-group {
+            display: flex;
+            gap: 10px;
         }
-        .match-row {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #333;
+
+        .terminal-input {
+            background: #000;
+            border: 1px solid var(--text-muted);
+            color: var(--glow-color);
+            padding: 10px;
+            flex-grow: 1;
+            font-family: monospace;
         }
-        .match-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
+
+        .terminal-input:focus {
+            outline: none;
+            border-color: var(--glow-color);
+            box-shadow: 0 0 5px var(--glow-color);
+        }
+
+        .example-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Console Display Area */
+        .console-display {
+            background: #000;
+            border: 1px solid var(--glow-color);
+            height: 320px;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,1);
+        }
+
+        .log-entry {
+            line-height: 1.4;
+        }
+
+        .log-entry.info { color: #00ccff; }
+        .log-entry.success { color: var(--glow-color); }
+        .log-entry.error { color: #ff3333; }
+        .log-entry.accent { color: #ffff33; }
+
+        .weather-data-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            border-top: 1px dashed var(--text-muted);
+            padding-top: 8px;
+        }
+
+        /* Custom scrollbar for console */
+        .console-display::-webkit-scrollbar {
+            width: 6px;
+        }
+        .console-display::-webkit-scrollbar-track {
+            background: #000;
+        }
+        .console-display::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: var(--glow-color);
+            animation: cursor-blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>The Ectopian Master Archive</h1>
-        <div class="stats" id="wordCountDisplay">Loading Lexicon...</div>
-    </header>
+    <div class="terminal-container">
+        <header>
+            <h1>⚡ METEO-SCANNER v4.04 ⚡</h1>
+            <div class="system-status">SYS_STATUS: ONLINE // SECURE_CONNECTION_ESTABLISHED</div>
+        </header>
 
-    <div class="container">
-        <div class="section">
-            <h2>Ultimate Two-Way Translator</h2>
-            <p>Every single branch word, suffix, and duplicate has been hard-split. Type English or Ectopian.</p>
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search (e.g., yoe, ameyatomie, f**king)...">
-                <button onclick="translateWord()">Translate</button>
+        <div class="grid-layout">
+            <div class="control-panel">
+                
+                <div class="panel-box">
+                    <h3>[01] Local Perimeter Scan</h3>
+                    <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-muted);">
+                        Pings local orbital satellites via device triangulation.
+                    </p>
+                    <button class="btn" onclick="initiateLocalScan()">Authorize Grid Tracking</button>
+                </div>
+
+                <div class="panel-box">
+                    <h3>[02] Global Sector Scanner</h3>
+                    <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-muted);">
+                        Intercepts deep atmospheric matrices outside your grid coordinates.
+                    </p>
+                    <button class="btn" onclick="initiateGlobalScan()">Scan Random Global Sector</button>
+                </div>
+
+                <div class="panel-box">
+                    <h3>[03] Target Manual Override</h3>
+                    <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-muted);">
+                        Input precise structural targets to decipher atmospheric pressures.
+                    </p>
+                    <div class="input-group">
+                        <input type="text" id="targetInput" class="terminal-input" placeholder="Enter location name...">
+                        <button class="btn" style="width: auto;" onclick="initiateTargetScan()">Execute</button>
+                    </div>
+                    <div class="example-text">⚠️ Input Example: "London" or "Tokyo" or "New York"</div>
+                </div>
+
             </div>
-            <div id="results"></div>
+
+            <div style="display: flex; flex-direction: column;">
+                <div style="font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; color: #fff;">
+                    &gt;_ Output Console Feed
+                </div>
+                <div class="console-display" id="consoleDisplay">
+                    <div class="log-entry info">[SYSTEM] Ready for uplink deployment...</div>
+                    <div class="log-entry"><span class="cursor"></span></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // The Motherload. Every bracket and parenthesis split into separate objects.
-        const lexicon = [
-            { ect: "yerama", eng: "yeshua" },
-            { ect: "fustomi", eng: "grab" },
-            { ect: "Awgoe", eng: "No" },
-            { ect: "Awgue", eng: "Yes" },
-            { ect: "AwgueCha", eng: "yeah/yup" },
-            { ect: "awgumana", eng: "okay" },
-            { ect: "awgumanahon", eng: "yes sir" },
-            { ect: "Bakro", eng: "Century" },
-            { ect: "barka", eng: "Spell" },
-            { ect: "bebak", eng: "thank" },
-            { ect: "bebo", eng: "brother" },
-            { ect: "befeg", eng: "grandfather" },
-            { ect: "Befta", eng: "Write" },
-            { ect: "bema", eng: "mother" },
-            { ect: "bemeg", eng: "grandmother" },
-            { ect: "bepa", eng: "father" },
-            { ect: "bese", eng: "sister" },
-            { ect: "Birma", eng: "Secret" },
-            { ect: "Bliva", eng: "Request" },
-            { ect: "bock", eng: "whole" },
-            { ect: "bockoe", eng: "hole" },
-            { ect: "brilka", eng: "Pathfinder" },
-            { ect: "brinda", eng: "Winter" },
-            { ect: "brodo", eng: "Day" },
-            { ect: "broka", eng: "Myth" },
-            { ect: "brokas", eng: "Myths" },
-            { ect: "Bromka", eng: "Battle" },
-            { ect: "bronka", eng: "Sunset" },
-            { ect: "Bruka", eng: "Clothes" },
-            { ect: "CacaCHoma", eng: "Island" },
-            { ect: "gegen", eng: "See" },
-            { ect: "cewa", eng: "plan" },
-            { ect: "Chalo", eng: "Nothing" },
-            { ect: "Chargo", eng: "Deception" },
-            { ect: "charka", eng: "Flame" },
-            { ect: "chau", eng: "Start" },
-            { ect: "chaui", eng: "Starter" },
-            { ect: "Chelefe", eng: "Every" },
-            { ect: "entey", eng: "he" },
-            { ect: "ento", eng: "she" },
-            { ect: "chense", eng: "wall" },
-            { ect: "cherek", eng: "Bless" },
-            { ect: "cherekfra", eng: "Blessing" },
-            { ect: "cherekfro", eng: "Blesses" },
-            { ect: "chesrok", eng: "lost" },
-            { ect: "chie", eng: "work" },
-            { ect: "chiefa", eng: "working" },
-            { ect: "chienim", eng: "worker" },
-            { ect: "chieng", eng: "craft" },
-            { ect: "meko", eng: "a" },
-            { ect: "Chingo", eng: "Data" },
-            { ect: "chiom", eng: "our" },
-            { ect: "Chira", eng: "Question" },
-            { ect: "chithame", eng: "stupid" },
-            { ect: "chithameki", eng: "stupidity" },
-            { ect: "chithameta", eng: "stupidest" },
-            { ect: "chizo", eng: "bozo" },
-            { ect: "Chocofa", eng: "Paint" },
-            { ect: "ChocofaCh", eng: "Painter" },
-            { ect: "chongmang", eng: "paragraph" },
-            { ect: "chorgo", eng: "pipe/pole/tube" },
-            { ect: "Chorlo", eng: "Wait" },
-            { ect: "Choro", eng: "Itchy" },
-            { ect: "Chara", eng: "Scratch" },
-            { ect: "chovro", eng: "Knowledge" },
-            { ect: "chrofa", eng: "Danger" },
-            { ect: "Chropa", eng: "Map" },
-            { ect: "Chura", eng: "Worship" },
-            { ect: "ChyYA", eng: "There" },
-            { ect: "ChyYA", eng: "they're" },
-            { ect: "ChyYA", eng: "their" },
-            { ect: "clor", eng: "window" },
-            { ect: "Corgmadet", eng: "Alphabet" },
-            { ect: "Corsa", eng: "Cat" },
-            { ect: "gakel", eng: "Hey" },
-            { ect: "sigchalt", eng: "action" },
-            { ect: "darna", eng: "Morning" },
-            { ect: "defanuel", eng: "delusional" },
-            { ect: "delgar", eng: "Silence" },
-            { ect: "deshnok", eng: "glass" },
-            { ect: "detch", eng: "dumb" },
-            { ect: "dimion", eng: "idiot" },
-            { ect: "dirfla", eng: "Betrayer" },
-            { ect: "Dirka", eng: "Guard" },
-            { ect: "dirkna", eng: "Loyalty" },
-            { ect: "Dofa", eng: "Hate" },
-            { ect: "Dofro", eng: "Past" },
-            { ect: "Dorga", eng: "Spirit" },
-            { ect: "dorma", eng: "Truth" },
-            { ect: "Dorna", eng: "Minute" },
-            { ect: "drafa", eng: "Spirit" },
-            { ect: "Draksa", eng: "Conflict" },
-            { ect: "drama", eng: "Snow" },
-            { ect: "Drana", eng: "Sun" },
-            { ect: "dravma", eng: "Honor" },
-            { ect: "Dreth", eng: "Key" },
-            { ect: "Dreya", eng: "Mirror" },
-            { ect: "drofa", eng: "Journey" },
-            { ect: "Droma", eng: "Bear" },
-            { ect: "druna", eng: "Mind" },
-            { ect: "drunata", eng: "Mindful" },
-            { ect: "ectenopo", eng: "ectopian" },
-            { ect: "eecha", eng: "responsability" },
-            { ect: "eee", eng: "fan" },
-            { ect: "eefa", eng: "response" },
-            { ect: "eefas", eng: "responses" },
-            { ect: "eefad", eng: "responsed" },
-            { ect: "effate", eng: "poop" },
-            { ect: "effato", eng: "pee" },
-            { ect: "ektofe", eng: "feed" },
-            { ect: "emose", eng: "know" },
-            { ect: "Erkaf", eng: "Guilt" },
-            { ect: "Erkafa", eng: "Guilty" },
-            { ect: "eterafa", eng: "eternity" },
-            { ect: "eterafa", eng: "forever" },
-            { ect: "chennai", eng: "but" },
-            { ect: "chennaiyok", eng: "supposed" },
-            { ect: "fador", eng: "these" },
-            { ect: "fadra", eng: "Hope" },
-            { ect: "fe", eng: "are" },
-            { ect: "febb", eng: "blue" },
-            { ect: "tende", eng: "need" },
-            { ect: "tendesah", eng: "want" },
-            { ect: "feg", eng: "green" },
-            { ect: "Fenga", eng: "grow" },
-            { ect: "Fengato", eng: "growing" },
-            { ect: "Fentra", eng: "Dream" },
-            { ect: "feo", eng: "orange" },
-            { ect: "fep", eng: "purple" },
-            { ect: "ferr", eng: "red" },
-            { ect: "Fervka", eng: "Strong" },
-            { ect: "fevel", eng: "not" },
-            { ect: "finklo", eng: "what" },
-            { ect: "fingrade", eng: "hungry" },
-            { ect: "Fira", eng: "Earth" },
-            { ect: "Firafo", eng: "Mountain" },
-            { ect: "firgo", eng: "Legend" },
-            { ect: "firlo", eng: "Storm" },
-            { ect: "Floxa", eng: "Slave" },
-            { ect: "foegeh", eng: "in" },
-            { ect: "Foja", eng: "Noon" },
-            { ect: "Fompa", eng: "Valley" },
-            { ect: "fonda", eng: "suck" },
-            { ect: "fordame", eng: "Kungfu" },
-            { ect: "Fordeme", eng: "Karate" },
-            { ect: "Fordi", eng: "Martial" },
-            { ect: "Fordime", eng: "Martial Arts" },
-            { ect: "forfi", eng: "old" },
-            { ect: "forfie", eng: "older" },
-            { ect: "forfoe", eng: "young" },
-            { ect: "forfoecha", eng: "younger" },
-            { ect: "forfoeto", eng: "youngster" },
-            { ect: "forfoeme", eng: "youngling" },
-            { ect: "Forga", eng: "Say" },
-            { ect: "forgimy", eng: "dirt" },
-            { ect: "forgimydama", eng: "dirty" },
-            { ect: "franta", eng: "Minute" },
-            { ect: "frantka", eng: "Sound" },
-            { ect: "fraoma", eng: "Eternity" },
-            { ect: "frek", eng: "Shame" },
-            { ect: "freknar", eng: "Shameful" },
-            { ect: "freknok", eng: "Shameless" },
-            { ect: "Frenda", eng: "Weapon" },
-            { ect: "Friga", eng: "Listen" },
-            { ect: "Frila", eng: "Aura" },
-            { ect: "frilka", eng: "Peace" },
-            { ect: "frilka", eng: "Pathfinder" },
-            { ect: "Frima", eng: "Fear" },
-            { ect: "Frina", eng: "Rain" },
-            { ect: "Frinja", eng: "Peace" },
-            { ect: "Frivo", eng: "Merchant" },
-            { ect: "frodna", eng: "Autumn" },
-            { ect: "frunjoe", eng: "Here" },
-            { ect: "Froja", eng: "Instrument" },
-            { ect: "Frol", eng: "Sacrifice" },
-            { ect: "Fromrin", eng: "Time" },
-            { ect: "fronko", eng: "Guardian" },
-            { ect: "Frotrinoma", eng: "Awesome" },
-            { ect: "Fugik", eng: "Companion/partner" },
-            { ect: "Fung", eng: "Ground" },
-            { ect: "furano", eng: "Strength" },
-            { ect: "galger", eng: "scar" },
-            { ect: "galgern", eng: "scaring" },
-            { ect: "galtra", eng: "Magic" },
-            { ect: "Galvo", eng: "Traveler" },
-            { ect: "garlad", eng: "shirt" },
-            { ect: "garlads", eng: "shirts" },
-            { ect: "garlods", eng: "pants" },
-            { ect: "garmo", eng: "Week" },
-            { ect: "Garmett", eng: "Tool" },
-            { ect: "orguyoto", eng: "on" },
-            { ect: "gemae", eng: "verb" },
-            { ect: "gemor", eng: "noun" },
-            { ect: "Gera", eng: "Large" },
-            { ect: "ginf'l", eng: "innocent" },
-            { ect: "gingle", eng: "sentance" },
-            { ect: "yandek", eng: "hell" },
-            { ect: "glanta", eng: "Spark" },
-            { ect: "glava", eng: "Lightning" },
-            { ect: "Glira", eng: "Blue" },
-            { ect: "glorma", eng: "Wisdom" },
-            { ect: "goda", eng: "go" },
-            { ect: "godacha", eng: "going" },
-            { ect: "gogma", eng: "phone/tablet" },
-            { ect: "gognam", eng: "doll" },
-            { ect: "gomaei", eng: "save" },
-            { ect: "gondrei", eng: "bro" },
-            { ect: "gondra", eng: "Deep (emotionally)" },
-            { ect: "neg", eng: "That" },
-            { ect: "ach", eng: "they" },
-            { ect: "o", eng: "the" },
-            { ect: "ento", eng: "then" },
-            { ect: "mencha", eng: "them" },
-            { ect: "Gorafad", eng: "super" },
-            { ect: "Gorat", eng: "Dog" },
-            { ect: "gorba", eng: "Captive" },
-            { ect: "Gorbap", eng: "Mystery" },
-            { ect: "gorcha", eng: "language" },
-            { ect: "Gorga", eng: "Dragon" },
-            { ect: "gorma", eng: "Group" },
-            { ect: "gormas", eng: "Groups" },
-            { ect: "Gorna", eng: "Moon" },
-            { ect: "gorpod", eng: "people" },
-            { ect: "gorsla", eng: "do" },
-            { ect: "gorsla'chi", eng: "doing" },
-            { ect: "Gorvo", eng: "oh" },
-            { ect: "grada", eng: "grand" },
-            { ect: "Granfu", eng: "Chi" },
-            { ect: "granta", eng: "Lie" },
-            { ect: "Grantaf", eng: "Book" },
-            { ect: "gronka", eng: "Bound" },
-            { ect: "gruaf", eng: "stone" },
-            { ect: "grun", eng: "down" },
-            { ect: "gruny", eng: "under" },
-            { ect: "gruwd", eng: "sock" },
-            { ect: "gruwde", eng: "socks" },
-            { ect: "guadog", eng: "yo" },
-            { ect: "guiqma", eng: "Family" },
-            { ect: "gumachia", eng: "population" },
-            { ect: "Hamma", eng: "Armor" },
-            { ect: "hapken", eng: "happy" },
-            { ect: "Hara", eng: "Forest" },
-            { ect: "zedasuke", eng: "Wild" },
-            { ect: "Henta", eng: "Far" },
-            { ect: "hera", eng: "Edit" },
-            { ect: "Hevero", eng: "Venture" },
-            { ect: "hoba", eng: "him" },
-            { ect: "hoka", eng: "her" },
-            { ect: "horded", eng: "sorry" },
-            { ect: "horga", eng: "about" },
-            { ect: "horka", eng: "learn" },
-            { ect: "horkad", eng: "learned" },
-            { ect: "horktom", eng: "complicate" },
-            { ect: "horktoms", eng: "complicated" },
-            { ect: "jangon", eng: "code" },
-            { ect: "jarma", eng: "Illusion" },
-            { ect: "jegenado", eng: "Shadow" },
-            { ect: "Jerm", eng: "Child" },
-            { ect: "Jermas", eng: "Children" },
-            { ect: "jero", eng: "god" },
-            { ect: "jilka", eng: "Heart" },
-            { ect: "Jivro", eng: "Rest" },
-            { ect: "Jorma", eng: "Discuss" },
-            { ect: "Tashkiita", eng: "Fool" },
-            { ect: "Jufa", eng: "Joy" },
-            { ect: "jurgo", eng: "it is" },
-            { ect: "jurnika", eng: "Celebrate" },
-            { ect: "justa", eng: "Dark" },
-            { ect: "justaff", eng: "Darkness" },
-            { ect: "justi", eng: "light" },
-            { ect: "Rile", eng: "Will" },
-            { ect: "Expiola", eng: "exercise" },
-            { ect: "Expiolano", eng: "exorcist" },
-            { ect: "Kafo", eng: "Eat" },
-            { ect: "kartra", eng: "Dusk" },
-            { ect: "Kelfa", eng: "Horse" },
-            { ect: "kelikanadrea", eng: "psychic" },
-            { ect: "kerlo", eng: "Ancestor" },
-            { ect: "kerlos", eng: "Ancestors" },
-            { ect: "Kerta", eng: "Disagree" },
-            { ect: "Kilo", eng: "Regret" },
-            { ect: "kirfa", eng: "Hot" },
-            { ect: "Klafo", eng: "Build" },
-            { ect: "Klara", eng: "Defeat" },
-            { ect: "Klarafa", eng: "Defeated" },
-            { ect: "Klish", eng: "Read" },
-            { ect: "Kluma", eng: "Victory" },
-            { ect: "koing", eng: "write" },
-            { ect: "Kora", eng: "Sad" },
-            { ect: "Kora", eng: "Sadness" },
-            { ect: "Kormach", eng: "Beach" },
-            { ect: "Kormate", eng: "Silver" },
-            { ect: "Korma", eng: "Answer" },
-            { ect: "Korna", eng: "Memory" },
-            { ect: "Korvo", eng: "Move" },
-            { ect: "Kova", eng: "Farmer" },
-            { ect: "Krasa", eng: "Shame" },
-            { ect: "Krina", eng: "Rabbit" },
-            { ect: "Kroma", eng: "Destroy" },
-            { ect: "kronka", eng: "King" },
-            { ect: "krulma", eng: "Betray" },
-            { ect: "krulmaden", eng: "Betrayed" },
-            { ect: "krulmael", eng: "Betrayal" },
-            { ect: "kuroda", eng: "Bless" },
-            { ect: "Kylma", eng: "Music" },
-            { ect: "Larka", eng: "Instant" },
-            { ect: "larvo", eng: "Lie" },
-            { ect: "Lasha", eng: "Ritual" },
-            { ect: "lerka", eng: "trend" },
-            { ect: "lerkad", eng: "trending" },
-            { ect: "lindra", eng: "Memory" },
-            { ect: "Linta", eng: "FALSE" },
-            { ect: "Lira", eng: "Courage" },
-            { ect: "Litha", eng: "Relief" },
-            { ect: "Lofa", eng: "Fish" },
-            { ect: "lofra", eng: "Afternoon" },
-            { ect: "lonfa", eng: "Spring" },
-            { ect: "Lora", eng: "End" },
-            { ect: "Lorna", eng: "Ice" },
-            { ect: "Lumfo", eng: "Shiny" },
-            { ect: "Malgo", eng: "Explain" },
-            { ect: "Manta", eng: "Near" },
-            { ect: "MaWa", eng: "tool" },
-            { ect: "mel", eng: "left" },
-            { ect: "Melfra", eng: "Blessing" },
-            { ect: "mer", eng: "right" },
-            { ect: "Mern", eng: "River" },
-            { ect: "merona", eng: "Queen" },
-            { ect: "Mifo", eng: "Jar" },
-            { ect: "mijor", eng: "Instant" },
-            { ect: "minim", eng: "mine" },
-            { ect: "minimy", eng: "miner" },
-            { ect: "minims", eng: "miners" },
-            { ect: "miniming", eng: "mining" },
-            { ect: "Miro", eng: "Love" },
-            { ect: "hive", eng: "home" },
-            { ect: "mokato", eng: "already" },
-            { ect: "mooktas", eng: "and" },
-            { ect: "meka", eng: "an" },
-            { ect: "morfa", eng: "bucko" },
-            { ect: "Morfag", eng: "Old" },
-            { ect: "morgafoe", eng: "too" },
-            { ect: "morgafoe", eng: "to" },
-            { ect: "morgafad", eng: "Warm" },
-            { ect: "morlan", eng: "Thunder" },
-            { ect: "morna", eng: "Blind" },
-            { ect: "chayo", eng: "Night" },
-            { ect: "omyato", eng: "up" },
-            { ect: "mychwacho", eng: "Random" },
-            { ect: "nadafing", eng: "clueless" },
-            { ect: "nakoe", eng: "Pussy" },
-            { ect: "Nando", eng: "tree" },
-            { ect: "Narga", eng: "Prophecy" },
-            { ect: "Narvo", eng: "Curse" },
-            { ect: "natche", eng: "forgive" },
-            { ect: "nekedenotuodo", eng: "dead" },
-            { ect: "nekedenotuodota", eng: "death" },
-            { ect: "nekfata", eng: "trip" },
-            { ect: "nekte", eng: "donkey" },
-            { ect: "neod", eng: "sped" },
-            { ect: "Nesto", eng: "Think" },
-            { ect: "Neva", eng: "Black" },
-            { ect: "nifrala", eng: "Boundless" },
-            { ect: "niko-ama", eng: "stranger" },
-            { ect: "nikoafo", eng: "big" },
-            { ect: "nirdo", eng: "Evening" },
-            { ect: "nofot", eng: "let" },
-            { ect: "Nomra", eng: "Help" },
-            { ect: "Nomras", eng: "Helps" },
-            { ect: "Nomrai", eng: "Helped" },
-            { ect: "nordik", eng: "stop" },
-            { ect: "norfura", eng: "Curse" },
-            { ect: "jab", eng: "back" },
-            { ect: "Nyro", eng: "Gray" },
-            { ect: "oodma", eng: "house" },
-            { ect: "orga", eng: "custom" },
-            { ect: "orkkmas", eng: "holiday" },
-            { ect: "Perda", eng: "Pink" },
-            { ect: "Phona", eng: "Rat" },
-            { ect: "Plika", eng: "Advisor" },
-            { ect: "Plufa", eng: "Excitement" },
-            { ect: "Pluma", eng: "Bone" },
-            { ect: "unsuk", eng: "cream" },
-            { ect: "poordfa", eng: "b**ch" },
-            { ect: "Pormo", eng: "Future" },
-            { ect: "pota", eng: "please" },
-            { ect: "heito", eng: "give" },
-            { ect: "heitochi", eng: "giving" },
-            { ect: "heitoe", eng: "gives" },
-            { ect: "Quagik", eng: "Friend" },
-            { ect: "Quakma", eng: "Ally" },
-            { ect: "Quara", eng: "Week" },
-            { ect: "Quilla", eng: "Month" },
-            { ect: "fendom", eng: "kill" },
-            { ect: "fendomoak", eng: "killer" },
-            { ect: "raekle", eng: "paper" },
-            { ect: "rafona", eng: "Judgment" },
-            { ect: "randa", eng: "Heal" },
-            { ect: "Rasha", eng: "Gold" },
-            { ect: "Refta", eng: "Bird" },
-            { ect: "rem", eng: "street" },
-            { ect: "Rie-e", eng: "Where" },
-            { ect: "Rie-ek", eng: "we're" },
-            { ect: "riiw", eng: "name" },
-            { ect: "Roga", eng: "Anger" },
-            { ect: "Rota", eng: "Angry" },
-            { ect: "Rokna", eng: "Fire" },
-            { ect: "Rorga", eng: "Cold" },
-            { ect: "Rovka", eng: "Leader" },
-            { ect: "Rutrinoma", eng: "Somewhere" },
-            { ect: "Rvata", eng: "Change" },
-            { ect: "Salvo", eng: "Yellow" },
-            { ect: "Sarta", eng: "Twilight" },
-            { ect: "Sartaff", eng: "Hour" },
-            { ect: "Sparkotafo", eng: "form" },
-            { ect: "Seka", eng: "Surprise" },
-            { ect: "Sera", eng: "Small" },
-            { ect: "senek", eng: "soul" },
-            { ect: "sharna", eng: "Stranger" },
-            { ect: "sherr", eng: "sea/ocean/river/lake/water/pond" },
-            { ect: "shurmo", eng: "Compassion" },
-            { ect: "Skira", eng: "Sky" },
-            { ect: "Sko", eng: "Sleep" },
-            { ect: "Slim", eng: "Be" },
-            { ect: "Slimo", eng: "Begin" },
-            { ect: "Slimoento", eng: "Beginning" },
-            { ect: "Slora", eng: "Art" },
-            { ect: "Sloranta", eng: "Artificial" },
-            { ect: "vanseh", eng: "outnumber" },
-            { ect: "vansehsko", eng: "outnumbered" },
-            { ect: "soma", eng: "bed" },
-            { ect: "sorda", eng: "Vision" },
-            { ect: "Sorme", eng: "Wind" },
-            { ect: "Sorma", eng: "Nightmare" },
-            { ect: "sortht", eng: "pillow" },
-            { ect: "sronka", eng: "Make" },
-            { ect: "Stri", eng: "Stand" },
-            { ect: "Tade", eng: "Play" },
-            { ect: "Swofe", eng: "Food" },
-            { ect: "tavra", eng: "number" },
-            { ect: "tavraska", eng: "numbered" },
-            { ect: "terka", eng: "Midnight" },
-            { ect: "Thera", eng: "Fog" },
-            { ect: "Thirsa", eng: "Healer" },
-            { ect: "Thora", eng: "Snake" },
-            { ect: "Thorma", eng: "Beast" },
-            { ect: "Thron", eng: "Leg" },
-            { ect: "Thurka", eng: "Curse" },
-            { ect: "Tingo", eng: "Some" },
-            { ect: "tirona", eng: "Grief" },
-            { ect: "torka", eng: "Deaf" },
-            { ect: "torm", eng: "bud" },
-            { ect: "tormlas", eng: "buddy" },
-            { ect: "torqua", eng: "Pride" },
-            { ect: "Torma", eng: "Slow" },
-            { ect: "Trafa", eng: "Jump" },
-            { ect: "tranta", eng: "foul" },
-            { ect: "trek", eng: "we" },
-            { ect: "trekende", eng: "weve" },
-            { ect: "Tremma", eng: "Sit" },
-            { ect: "triathama", eng: "thing" },
-            { ect: "Trinoma", eng: "Burrito" },
-            { ect: "trofka", eng: "Song" },
-            { ect: "trunfor", eng: "intruder" },
-            { ect: "turma", eng: "Glory" },
-            { ect: "turmoach", eng: "Glorious" },
-            { ect: "turodo", eng: "found" },
-            { ect: "Tyra", eng: "Calm" },
-            { ect: "Urga", eng: "Insect" },
-            { ect: "Uvna", eng: "Fight" },
-            { ect: "Uyeo", eng: "Upload" },
-            { ect: "deska", eng: "Dark" },
-            { ect: "vaork", eng: "Light (illumination)" },
-            { ect: "Varda", eng: "Agree" },
-            { ect: "varlo", eng: "Freedom" },
-            { ect: "verda", eng: "Summer" },
-            { ect: "Verfa", eng: "Ask" },
-            { ect: "Verfacha", eng: "Asked" },
-            { ect: "Verfachi", eng: "Asking" },
-            { ect: "Verno", eng: "White" },
-            { ect: "Verta", eng: "Star" },
-            { ect: "Vigna", eng: "Down" },
-            { ect: "Vintch", eng: "Vision" },
-            { ect: "Vinta", eng: "TRUE" },
-            { ect: "virda", eng: "Wisdom" },
-            { ect: "viroch", eng: "Joy" },
-            { ect: "vlasta", eng: "coward" },
-            { ect: "Voda", eng: "Up" },
-            { ect: "Vompa", eng: "Treasure" },
-            { ect: "vorcha", eng: "Team" },
-            { ect: "vorka", eng: "Body" },
-            { ect: "Vorketcho", eng: "Teacher" },
-            { ect: "Vorma", eng: "Fast" },
-            { ect: "Vrafo", eng: "Age" },
-            { ect: "vrako", eng: "Enemy" },
-            { ect: "vrakos", eng: "Enemies" },
-            { ect: "vringfa", eng: "Sight" },
-            { ect: "vrita", eng: "Year" },
-            { ect: "Vro", eng: "Speak" },
-            { ect: "wago", eng: "meant" },
-            { ect: "Walo", eng: "Flag" },
-            { ect: "wargo", eng: "it" },
-            { ect: "wego", eng: "is" },
-            { ect: "wegont", eng: "isnt" },
-            { ect: "wergu", eng: "guy" },
-            { ect: "Wervanto", eng: "Weak" },
-            { ect: "Werva", eng: "Wolf" },
-            { ect: "Weva", eng: "Cloud" },
-            { ect: "winder", eng: "air" },
-            { ect: "Winfa", eng: "clear" },
-            { ect: "wodama", eng: "away" },
-            { ect: "worgoma", eng: "Protect" },
-            { ect: "wreg", eng: "Kind" },
-            { ect: "wregan", eng: "Kindness" },
-            { ect: "Wremo", eng: "Thief" },
-            { ect: "wrika", eng: "Second" },
-            { ect: "Yata", eng: "Dawn" },
-            // THE BRANCH WORD MOTHERLOAD: ME/YOU/I/AM separated!
-            { ect: "ye", eng: "Me" },
-            { ect: "yoe", eng: "You" },
-            { ect: "yie", eng: "I" },
-            { ect: "ya", eng: "Am" },
-            { ect: "Yed", eng: "File" },
-            { ect: "yaimek", eng: "My" },
-            { ect: "Yer", eng: "Your" },
-            { ect: "Yer", eng: "You're" },
-            { ect: "yerafah", eng: "best" },
-            { ect: "yerofoe", eng: "worst" },
-            { ect: "yetch", eng: "english" },
-            { ect: "yiema", eng: "im" },
-            { ect: "enjar", eng: "Run" },
-            { ect: "yoimoama", eng: "Extension" },
-            { ect: "yorgamae", eng: "sheet" },
-            { ect: "yorgamaes", eng: "sheets" },
-            { ect: "Yorma", eng: "Monster" },
-            { ect: "Yorna", eng: "Talk" },
-            { ect: "Yro", eng: "Axe" },
-            { ect: "yurk", eng: "shut" },
-            { ect: "Zarma", eng: "Soldier" },
-            { ect: "Zeva", eng: "imbecile" },
-            { ect: "Zorba", eng: "Shield" },
-            { ect: "kabta", eng: "f**k" },
-            { ect: "kabtakan", eng: "f**ker" },
-            { ect: "kabtacha", eng: "f**king" },
-            { ect: "gerfcha", eng: "gay" },
-            { ect: "bonko", eng: "guitar" },
-            { ect: "chekroma", eng: "beautiful" },
-            { ect: "chekromo", eng: "ugly" },
-            { ect: "turmonos", eng: "rizz" },
-            { ect: "turmonosla", eng: "rizzler" },
-            { ect: "shendokama", eng: "invincible" },
-            { ect: "chiko", eng: "this" },
-            { ect: "cheropo", eng: "because" },
-            { ect: "nekepame", eng: "sword" },
-            { ect: "tripo", eng: "fantastic" },
-            { ect: "uneyo", eng: "trio" },
-            { ect: "duedo", eng: "dynamic" },
-            { ect: "noedo", eng: "duo" },
-            { ect: "bisto", eng: "sh*t" },
-            { ect: "bexta", eng: "better" },
-            { ect: "chessno", eng: "piece" },
-            { ect: "tilko", eng: "little" },
-            { ect: "come", eng: "of" },
-            { ect: "nekedeno", eng: "die" },
-            { ect: "nefo", eng: "pain" },
-            { ect: "nefodo", eng: "painful" },
-            { ect: "belfacho", eng: "appointment" },
-            { ect: "fentado", eng: "telekinesis" },
-            { ect: "yonta", eng: "have" },
-            { ect: "chenkotada", eng: "oxymoron" },
-            { ect: "chentowaba", eng: "moron" },
-            { ect: "vendo", eng: "scary" },
-            { ect: "vendi", eng: "scari" },
-            { ect: "vendikama", eng: "scariness" },
-            { ect: "vendokach", eng: "scared" },
-            { ect: "yifa", eng: "i've" },
-            { ect: "nokadota", eng: "way" },
-            { ect: "wenko", eng: "got" },
-            { ect: "henskae", eng: "brat" },
-            { ect: "mechota", eng: "at" },
-            { ect: "indoto", eng: "inevitable" },
-            { ect: "fena", eng: "why" },
-            { ect: "cheno", eng: "wont" },
-            { ect: "chefoyo", eng: "despicable" },
-            { ect: "cest", eng: "last" },
-            { ect: "mem", eng: "word" },
-            { ect: "chense", eng: "any" },
-            { ect: "ficho", eng: "if" },
-            { ect: "akeh", eng: "dare" },
-            { ect: "nafento", eng: "dinner" },
-            { ect: "chektonto", eng: "lunch" },
-            { ect: "bektofa", eng: "breakfast" },
-            { ect: "entodo", eng: "speed" },
-            { ect: "gentee", eng: "organ" },
-            { ect: "nektodo", eng: "game" },
-            { ect: "tokedo", eng: "retard" },
-            { ect: "tokedode", eng: "retarded" },
-            { ect: "jendok", eng: "might" },
-            { ect: "ant", eng: "as" },
-            { ect: "edo", eng: "well" },
-            { ect: "maun", eng: "be" },
-            { ect: "burinku", eng: "blink" },
-            { ect: "furasshu", eng: "flash" },
-            { ect: "nechte", eng: "check" },
-            { ect: "nechteke", eng: "checked" },
-            { ect: "nokaba", eng: "would" },
-            { ect: "dido", eng: "back at you-same to you" },
-            { ect: "tenadato", eng: "pass" },
-            { ect: "femota", eng: "hello" },
-            { ect: "tolada", eng: "now" },
-            { ect: "gorslame", eng: "dont" },
-            { ect: "chenian", eng: "piano" },
-            { ect: "hend", eng: "rock" },
-            { ect: "fwa", eng: "roll" },
-            { ect: "gif", eng: "with" },
-            { ect: "enta", eng: "great" },
-            { ect: "chev", eng: "come" },
-            { ect: "gendopo", eng: "power" },
-            { ect: "fenco", eng: "should" },
-            { ect: "gedoma", eng: "person" },
-            { ect: "tefro", eng: "ever" },
-            { ect: "akon", eng: "how" },
-            { ect: "koinatsu", eng: "bastard" },
-            { ect: "nafteg", eng: "fat" },
-            { ect: "amaeda", eng: "animal" },
-            { ect: "mecho", eng: "bean" },
-            { ect: "anatopa", eng: "tiger" },
-            { ect: "tankai", eng: "walk" },
-            { ect: "yahma", eng: "alone" },
-            { ect: "zureku", eng: "lone" },
-            { ect: "naiya", eng: "hunter" },
-            { ect: "shendonezawa", eng: "fierce (creature, being, ECT.)" },
-            { ect: "sectonopo", eng: "sheep" },
-            { ect: "fintro", eng: "take" },
-            { ect: "fehuanto", eng: "depart" },
-            { ect: "huanto", eng: "part" },
-            { ect: "hauck", eng: "fall" },
-            { ect: "henchaunt", eng: "rise" },
-            { ect: "akeyano", eng: "anew" },
-            { ect: "yano", eng: "new" },
-            { ect: "fentoado", eng: "keep" },
-            { ect: "hunth", eng: "just" },
-            { ect: "fenter", eng: "try" },
-            { ect: "fenterche", eng: "trying" },
-            { ect: "fentera", eng: "tried" },
-            { ect: "huonafe", eng: "never" },
-            { ect: "hegeromo", eng: "alarm" },
-            { ect: "geroama", eng: "clock" },
-            { ect: "hektomafe", eng: "human" },
-            { ect: "fenchahama", eng: "path" },
-            { ect: "wrup", eng: "us" },
-            { ect: "ponfa-ze", eng: "panther" },
-            { ect: "dus", eng: "can" },
-            { ect: "dusk", eng: "cant" },
-            { ect: "duskta", eng: "cant" },
-            { ect: "nircha", eng: "even" },
-            { ect: "ganch", eng: "land" },
-            { ect: "phit", eng: "hit" },
-            { ect: "yoek", eng: "look" },
-            { ect: "nomato", eng: "still" },
-            { ect: "ameyoto", eng: "forgot" },
-            { ect: "ameyoeto", eng: "forgot" },
-            { ect: "ameyatoha", eng: "forgetting" },
-            { ect: "ameyatocha", eng: "forgetful" },
-            { ect: "ameyatomie", eng: "forgotten" },
-            { ect: "hemo", eng: "show" },
-            { ect: "nodiko", eng: "prove" },
-            { ect: "deahon", eng: "done" },
-            { ect: "demoi", eng: "holy" },
-            { ect: "foam", eng: "so" },
-            { ect: "ameyano", eng: "midst" },
-            { ect: "hockaemono", eng: "from" },
-            { ect: "muck", eng: "must" },
-            { ect: "nefrakto", eng: "battery" },
-            { ect: "lin", eng: "charge" },
-            { ect: "linto", eng: "charger" },
-            { ect: "lincha", eng: "charging" },
-            { ect: "zelenni", eng: "personal" },
-            { ect: "zelenniex", eng: "personality" },
-            { ect: "zelennial", eng: "personality" },
-            { ect: "zelennium", eng: "personally" },
-            { ect: "katchome", eng: "kitchen" },
-            { ect: "ichota", eng: "beat" },
-            { ect: "seefre", eng: "murder" },
-            { ect: "seefreku", eng: "murderer" },
-            { ect: "zylee", eng: "chase" },
-            { ect: "zyleek", eng: "chaser" },
-            { ect: "roshiku", eng: "field" },
-            { ect: "centeriantofa", eng: "court" },
-            { ect: "oamatodoshyomo", eng: "yard" },
-            { ect: "soulak", eng: "drop" },
-            { ect: "forshakta", eng: "call" },
-            { ect: "entemayem", eng: "opponent" },
-            { ect: "malekosto", eng: "clash" },
-            { ect: "ielakso", eng: "strike" },
-            { ect: "lieafi", eng: "roar" },
-            { ect: "ameyameoto", eng: "again" },
-            { ect: "wentecho", eng: "who" },
-            { ect: "backero", eng: "glad" },
-            { ect: "mirdo", eng: "live" },
-            { ect: "mirda", eng: "living" },
-            { ect: "mirdomano", eng: "living" },
-            { ect: "henatafe", eng: "break" },
-            { ect: "headonef", eng: "may" },
-            { ect: "quisota", eng: "by" },
-            { ect: "quisota", eng: "buy" },
-            { ect: "quisota", eng: "bye" },
-            { ect: "entodrick", eng: "execute" },
-            { ect: "entodricku", eng: "executed" },
-            { ect: "rento", eng: "get" },
-            { ect: "rentoyama", eng: "getting" },
-            { ect: "gejo", eng: "over" },
-            { ect: "maldeer", eng: "also" },
-            { ect: "tevo", eng: "defense" },
-            { ect: "tevoko", eng: "defenses" },
-            { ect: "toonta", eng: "excuse" },
-            { ect: "zelx", eng: "mimic" },
-            { ect: "zelxo", eng: "mimicer" },
-            { ect: "casta", eng: "terrain" },
-            { ect: "tafe", eng: "generate" },
-            { ect: "fere", eng: "generation" },
-            { ect: "walthey", eng: "vivid" },
-            { ect: "enchfal", eng: "very" },
-            { ect: "teto", eng: "mock" },
-            { ect: "tetochi", eng: "mocking" },
-            { ect: "hakata", eng: "really" },
-            { ect: "shkomo", eng: "good" },
-            { ect: "ben", eng: "good" },
-            { ect: "trikofancheo", eng: "wrong" },
-            { ect: "tekewo", eng: "believe" },
-            { ect: "boj", eng: "bor" },
-            { ect: "bojedo", eng: "boring" },
-            { ect: "bojadoka", eng: "bored" },
-            { ect: "chito", eng: "lord" },
-            { ect: "heyanto", eng: "dignity" },
-            { ect: "fenat", eng: "face" },
-            { ect: "inoshi", eng: "out" },
-            { ect: "herkor", eng: "sting" },
-            { ect: "herkoes", eng: "stinger" },
-            { ect: "faegros", eng: "scorpion" },
-            { ect: "aesto", eng: "kiss" },
-            { ect: "gealopet", eng: "intergalactic" },
-            { ect: "gealopetal", eng: "intergalactical" },
-            { ect: "felpa", eng: "interface" },
-            { ect: "qault", eng: "yall" },
-            { ect: "ault", eng: "all" },
-            { ect: "check", eng: "cook" },
-            { ect: "checkeul", eng: "cooked" },
-            { ect: "swankete", eng: "drink" },
-            { ect: "Catchuke", eng: "today" },
-            { ect: "Kelikoma", eng: "Tomorrow" },
-            { ect: "haykto", eng: "place" },
-            { ect: "kean", eng: "win" },
-            { ect: "keanda", eng: "winner" },
-            { ect: "chekerfie", eng: "lose" },
-            { ect: "chaek", eng: "loss" },
-            { ect: "cheabaro", eng: "when" },
-            { ect: "valkrama", eng: "has" },
-            { ect: "chq", eng: "or" },
-            { ect: "queek", eng: "man" },
-            { ect: "quehk", eng: "men" },
-            { ect: "gorqueek", eng: "woman" },
-            { ect: "gorquehk", eng: "women" },
-            { ect: "warakara", eng: "which" },
-            { ect: "Heaomeff", eng: "Apple" },
-            { ect: "retch", eng: "add" },
-            { ect: "inashito", eng: "update" },
-            { ect: "inositol", eng: "dictionary" },
-            { ect: "idocracy", eng: "plural" },
-            { ect: "chaoporo", eng: "those" },
-            { ect: "ganlomeh", eng: "grammar" },
-            { ect: "dhacheh", eng: "rule" },
-            { ect: "chokehg", eng: "voice" },
-            { ect: "oimay", eng: "chat" },
-            { ect: "akenga", eng: "self" },
-            { ect: "yerkenga", eng: "yourself" },
-            { ect: "yerkongas", eng: "yourselves" },
-            { ect: "aido", eng: "finish" },
-            { ect: "haen", eng: "proper" },
-            { ect: "haenq", eng: "properly" },
-            { ect: "phlanto", eng: "base" },
-            { ect: "phlanko", eng: "basement" },
-            { ect: "chehdersu", eng: "Vitality" },
-            { ect: "shinakaizandra", eng: "luminescence/luminescent" },
-            { ect: "koriadukame", eng: "handsome" },
-            { ect: "yundoka", eng: "fence" },
-            { ect: "kainotawa", eng: "gate" }
+        const consoleDisplay = document.getElementById('consoleDisplay');
+        
+        // Random global arrays for Global Scanner option
+        const globalSectors = [
+            { name: "Tokyo Sector", lat: 35.6762, lon: 139.6503 },
+            { name: "London Grid", lat: 51.5074, lon: -0.1278 },
+            { name: "Cairo Nexus", lat: 30.0444, lon: 31.2357 },
+            { name: "Reykjavik Frost-Zone", lat: 64.1466, lon: -21.9426 },
+            { name: "Sydney Node", lat: -33.8688, lon: 151.2093 },
+            { name: "Amazon Rainforest Basin", lat: -3.4653, lon: -62.2159 }
         ];
 
-        // Display exact count to prove it loaded fully
-        document.getElementById('wordCountDisplay').innerText = `Lexicon Active: ${lexicon.length} Total Registered Words`;
+        // Maps Open-Meteo codes to Cyberpunk Atmosphere States
+        function interpretWeatherCode(code) {
+            if (code === 0) return "CLEAR SKY // OPTIMAL VISIBILITY";
+            if ([1, 2, 3].includes(code)) return "PARTIAL CLOUD MATRIX // SCATTERED DISRUPTION";
+            if ([45, 48].includes(code)) return "HEAVY FOG SHIELD // VISIBILITY CRITICAL";
+            if ([51, 53, 55, 61, 63, 65].includes(code)) return "PRECIPITATION DISCHARGE // WET CONDITIONS";
+            if ([71, 73, 75, 77, 85, 86].includes(code)) return "CRYOSPHERIC FALLOUT // FREEZE HAZARD";
+            if ([95, 96, 99].includes(code)) return "ELECTRICAL STORM INFUSION // DANGER WARNING";
+            return "UNKNOWN ATMOSPHERIC ANOMALY";
+        }
 
-        function translateWord() {
-            const input = document.getElementById('searchInput').value.toLowerCase().trim();
-            const resultsDiv = document.getElementById('results');
-            
-            if (input === "") {
-                resultsDiv.style.display = "block";
-                resultsDiv.innerHTML = "Bro, you have to type something.";
-                return;
+        // Logs messages to the simulated hacker console
+        function logToConsole(message, type = '') {
+            // Remove the previous cursor entry if it exists
+            const existingCursor = consoleDisplay.querySelector('.cursor');
+            if (existingCursor) {
+                existingCursor.parentElement.remove();
             }
 
-            // Find all exact matches from both sides
-            const matches = lexicon.filter(w => w.eng.toLowerCase() === input || w.ect.toLowerCase() === input);
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDisplay.appendChild(entry);
 
-            resultsDiv.style.display = "block";
+            // Re-add blinking cursor at bottom
+            const cursorEntry = document.createElement('div');
+            cursorEntry.innerHTML = '<span class="cursor"></span>';
+            consoleDisplay.appendChild(cursorEntry);
 
-            if (matches.length > 0) {
-                let htmlOutput = "";
-                matches.forEach(match => {
-                    htmlOutput += `<div class="match-row">Ectopian: <strong style="color: white; font-size: 1.4rem;">${match.ect}</strong> = English: <span style="color: #bbb;">${match.eng}</span></div>`;
-                });
-                resultsDiv.innerHTML = htmlOutput;
-            } else {
-                // If no exact match, do a partial search
-                const partials = lexicon.filter(w => w.eng.toLowerCase().includes(input) || w.ect.toLowerCase().includes(input));
-                if (partials.length > 0) {
-                    let htmlOutput = "<em>No exact match. Did you mean:</em><br><br>";
-                    // Show up to top 5 partials to keep it clean
-                    partials.slice(0, 5).forEach(match => {
-                         htmlOutput += `<div class="match-row">Ectopian: <strong style="color: white;">${match.ect}</strong> = English: <span style="color: #bbb;">${match.eng}</span></div>`;
-                    });
-                    resultsDiv.innerHTML = htmlOutput;
-                } else {
-                    resultsDiv.innerHTML = `Word not found. Either you spelled it wrong, or Yami hasn't invented it yet.`;
-                }
+            // Auto-scroll to view updates
+            consoleDisplay.scrollTop = consoleDisplay.scrollHeight;
+        }
+
+        // Core API Logic for gathering and rendering meteorological payloads
+        async function fetchWeatherData(lat, lon, locationLabel) {
+            try {
+                logToConsole(`Querying weather API matrices for Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}...`, 'info');
+                
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=ms`);
+                
+                if (!response.ok) throw new Error("Data stream interrupted.");
+                const data = await response.json();
+                
+                const current = data.current;
+                const weatherState = interpretWeatherCode(current.weather_code);
+
+                logToConsole(`[SUCCESS] Packet decrypted for sector: ${locationLabel.toUpperCase()}`, 'success');
+                
+                // Print beautifully organized hacker read-out data block
+                let report = `
+                    <div class="weather-data-grid">
+                        <div class="accent">⚡ THERMAL: ${current.temperature_2m}°C</div>
+                        <div class="accent">⚡ APPARENT: ${current.apparent_temperature}°C</div>
+                        <div class="accent">⚡ HUMIDITY: ${current.relative_humidity_2m}%</div>
+                        <div class="accent">⚡ WIND SPEED: ${current.wind_speed_10m} m/s</div>
+                    </div>
+                    <div style="color: #fff; margin-top: 5px; font-weight: bold;">STATUS: ${weatherState}</div>
+                `;
+                logToConsole(report);
+
+            } catch (error) {
+                logToConsole(`CRITICAL ERROR: Failed to decode atmospheric stream. ${error.message}`, 'error');
             }
         }
 
-        // Allow pressing Enter to search
-        document.getElementById("searchInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                translateWord();
+        // MODULE 01: Request Local Tracker Access
+        function initiateLocalScan() {
+            logToConsole("Requesting structural mainframe tracking validation...", 'info');
+            
+            if (!navigator.geolocation) {
+                logToConsole("CRITICAL ERROR: Geolocation tracking systems missing from host terminal.", "error");
+                return;
             }
-        });
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    logToConsole("Uplink handshake approved. Coordinates acquired.", "success");
+                    fetchWeatherData(lat, lon, "Local Mainframe Grid");
+                },
+                (error) => {
+                    logToConsole(`ACCESS DENIED: Tracking request rejected by host user. Core code: ${error.code}`, "error");
+                }
+            );
+        }
+
+        // MODULE 02: Tracking Global Target Points
+        function initiateGlobalScan() {
+            logToConsole("Diverting proxy feeds through external global coordinates...", 'info');
+            const randomSector = globalSectors[Math.floor(Math.random() * globalSectors.length)];
+            logToConsole(`Intercepting sector frequencies at: ${randomSector.name}`, 'info');
+            fetchWeatherData(randomSector.lat, randomSector.lon, randomSector.name);
+        }
+
+        // MODULE 03: Precision Override Tracker
+        async function initiateTargetScan() {
+            const inputVal = document.getElementById('targetInput').value.trim();
+            if (!inputVal) {
+                logToConsole("CRITICAL INTERRUPT: Target override prompt is void. Supply coordinates.", "error");
+                return;
+            }
+
+            logToConsole(`Searching global directory matrices for entry: "${inputVal}"...`, 'info');
+
+            try {
+                // Uses open-meteo's public free geocoder to map strings into actual coordinates
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inputVal)}&count=1&language=en&format=json`);
+                const geoData = await geoRes.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    logToConsole(`OVERRIDE FAILURE: Direct structural scan found no trace of target: "${inputVal}"`, 'error');
+                    return;
+                }
+
+                const target = geoData.results[0];
+                logToConsole(`Target mapped! Verified: ${target.name}, ${target.country || 'Unknown Sector'}`, 'success');
+                fetchWeatherData(target.latitude, target.longitude, target.name);
+
+            } catch (err) {
+                logToConsole(`OVERRIDE ERROR: Database access failed. ${err.message}`, 'error');
+            }
+        }
     </script>
 </body>
 </html>
