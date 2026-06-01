@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL WEATHER MONITOR v2.0</title>
+    <title>TACTICAL WEATHER MONITOR v2.1</title>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -60,6 +60,11 @@
             color: var(--text-main);
         }
 
+        .status-container {
+            display: flex;
+            gap: 10px;
+        }
+
         .status-badge {
             background: rgba(0, 255, 102, 0.1);
             color: var(--accent-green);
@@ -68,6 +73,16 @@
             font-size: 0.85rem;
             font-weight: bold;
             border: 1px solid var(--accent-green);
+        }
+
+        .timer-badge {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: 1px solid var(--accent-cyan);
         }
 
         .layout-grid {
@@ -160,7 +175,6 @@
             border-left: 3px solid var(--accent-cyan);
         }
 
-        /* Simulator Switch styling */
         .sim-container {
             display: flex;
             align-items: center;
@@ -168,7 +182,6 @@
             margin-top: 5px;
         }
 
-        /* Right Side Display Panels */
         .display-column {
             display: flex;
             flex-direction: column;
@@ -184,7 +197,6 @@
             margin-bottom: 5px;
         }
 
-        /* Dynamic Alert Window styling */
         .alert-box {
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.1);
@@ -225,7 +237,6 @@
             50% { border-color: #ff99bb; }
         }
 
-        /* Metrics Grid */
         .metrics-box {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(143, 160, 221, 0.2);
@@ -282,7 +293,10 @@
     <div class="dashboard">
         <header>
             <h1>TACTICAL WEATHER ALERT CENTER</h1>
-            <div class="status-badge" id="systemStatus">STATUS: READY</div>
+            <div class="status-container">
+                <div class="timer-badge" id="syncTimer">AUTO-REFRESH: INACTIVE</div>
+                <div class="status-badge" id="systemStatus">STATUS: READY</div>
+            </div>
         </header>
 
         <div class="layout-grid">
@@ -316,7 +330,7 @@
                     <h3>[Developer Tools] Warning Simulator</h3>
                     <p>Force the scanner to fake a hazardous climate profile so you can instantly verify alert visuals.</p>
                     <div class="sim-container">
-                        <input type="checkbox" id="simCheckbox" style="transform: scale(1.3); cursor: pointer;">
+                        <input type="checkbox" id="simCheckbox" style="transform: scale(1.3); cursor: pointer;" onchange="triggerSimUpdate()">
                         <label for="simCheckbox" style="font-size: 0.85rem; color: #ff4d88; font-weight: bold; cursor: pointer;">
                             Simulate Active Severe Tornado/Storm Pattern
                         </label>
@@ -368,7 +382,13 @@
     </div>
 
     <script>
-        // Set up clean real-world standard descriptions for WMO weather codes
+        // Track the current operational context so background refreshes know what to scan
+        let currentMode = null; // 'local', 'global', or 'custom'
+        let lastCoordinates = { lat: null, lon: null, label: "" };
+        let refreshTimer = null;
+        let countdownInterval = null;
+        let secondsRemaining = 600; // 10 minutes in seconds
+
         function getWeatherDescription(code) {
             if (code === 0) return "Clear Skies";
             if ([1, 2, 3].includes(code)) return "Partly Cloudy / Overcast";
@@ -379,7 +399,6 @@
             return "Unidentified Atmospheric Anomaly";
         }
 
-        // Preset arrays for Global scan options
         const globalZones = [
             { name: "Tokyo Sector, Japan", lat: 35.6762, lon: 139.6503 },
             { name: "London Grid, United Kingdom", lat: 51.5074, lon: -0.1278 },
@@ -389,7 +408,6 @@
             { name: "Oklahoma Grid, USA", lat: 35.4676, lon: -97.5164 }
         ];
 
-        // Updates the text status bar at top right
         function updateStatus(text, isProcessing = false) {
             const statusEl = document.getElementById('systemStatus');
             statusEl.innerText = `STATUS: ${text.toUpperCase()}`;
@@ -397,13 +415,49 @@
             statusEl.style.color = isProcessing ? "var(--accent-cyan)" : "var(--accent-green)";
         }
 
-        // Analyzes weather telemetry data to generate specific alerts
+        // Handles counting down the 10-minute timer visually
+        function startCountdown() {
+            clearInterval(countdownInterval);
+            secondsRemaining = 600; 
+            
+            countdownInterval = setInterval(() => {
+                secondsRemaining--;
+                const mins = Math.floor(secondsRemaining / 60);
+                const secs = secondsRemaining % 60;
+                document.getElementById('syncTimer').innerText = `AUTO-REFRESH: ${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+                
+                if (secondsRemaining <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        // Sets up the actual 10-minute loop cycle
+        function setupAutoRefresh() {
+            clearTimeout(refreshTimer);
+            startCountdown();
+            
+            refreshTimer = setTimeout(() => {
+                if (currentMode === 'local') {
+                    // Re-request GPS to confirm it's still allowed and position hasn't shifted
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            lastCoordinates.lat = pos.coords.latitude;
+                            lastCoordinates.lon = pos.coords.longitude;
+                            fetchWeatherData(lastCoordinates.lat, lastCoordinates.lon, lastCoordinates.label);
+                        },
+                        () => { updateStatus("Refresh Blocked"); }
+                    );
+                } else if (lastCoordinates.lat && lastCoordinates.lon) {
+                    // For global or custom queries, refresh using saved coordinates
+                    fetchWeatherData(lastCoordinates.lat, lastCoordinates.lon, lastCoordinates.label);
+                }
+            }, 600000); // 10 minutes standard execution window
+        }
+
         function evaluateAlerts(currentData) {
             const alerts = [];
-            const isSimulated = document.getElementById('simCheckbox').checked;
-
-            // Check if user turned on the warning tester cheat code
-            if (isSimulated) {
+            if (document.getElementById('simCheckbox').checked) {
                 alerts.push("🚨 TORNADO WARNING: High-velocity atmospheric rotation vectors and severe hook echoes detected. Take structural shelter immediately!");
                 alerts.push("⚠️ SEVERE THUNDERSTORM WARNING: Intrusive electrical discharges and destructive hail hazards active in the area.");
                 alerts.push("⚠️ FLASH FLOOD WARNING: Excess precipitation exceeds safe drainage infrastructure capacities.");
@@ -411,87 +465,77 @@
             }
 
             const code = currentData.weather_code;
-            const wind = currentData.wind_speed_10m; // Metric standard meters per second
+            const wind = currentData.wind_speed_10m;
 
-            // Evaluate Thunderstorm Code Conditions
             if ([95, 96, 99].includes(code)) {
                 alerts.push("⚠️ SEVERE THUNDERSTORM WARNING: Dangerous lightning arrays and severe localized cell structures active.");
-                // Combine high wind triggers into a Tornado Alert if severe thunderstorm is active
                 if (wind > 16) {
                     alerts.push("🚨 TORNADO WARNING: Destructive wind shear and violent rotational updrafts present. Seek interior shelter.");
                 }
             }
-
-            // Evaluate Pure High Wind Conditions
             if (wind >= 18) {
                 alerts.push(`⚠️ HIGH WIND WARNING: Damaging winds occurring at ${wind} m/s. Secure outdoor structural assets.`);
                 if (wind >= 24) {
                     alerts.push("🚨 TORNADO WARNING: Catastrophic structural wind stress thresholds breached.");
                 }
             }
-
-            // Evaluate Rain/Flood Thresholds
             if ([65, 82].includes(code)) {
                 alerts.push("⚠️ FLASH FLOOD WARNING: Rapid, torrential rain accumulation detected. Avoid low-lying sectors.");
             }
-
-            // Fallback clear notice
             if (alerts.length === 0) {
                 alerts.push("✅ NO ACTIVE SEVERE WEATHER WARNINGS OR HAZARDS FOUND FOR THIS ZONE.");
             }
-
             return alerts;
         }
 
-        // Render the processed data out to the screen elements cleanly
+        // Cache the last data chunk loaded globally to toggle simulations fluidly
+        let activeCache = null;
+
         function renderMetrics(data, locationName) {
+            activeCache = data;
             document.getElementById('displayLocation').innerText = `Target Grid: ${locationName}`;
-            
-            // Inject values into text containers
             document.getElementById('valTemp').innerText = `${data.temperature_2m}°C`;
             document.getElementById('valApparent').innerText = `${data.apparent_temperature}°C`;
             document.getElementById('valHumidity').innerText = `${data.relative_humidity_2m}%`;
             document.getElementById('valWind').innerText = `${data.wind_speed_10m} m/s`;
             document.getElementById('valCondition').innerText = getWeatherDescription(data.weather_code);
 
-            // Populate warnings block
             const alertBox = document.getElementById('alertBox');
-            alertBox.innerHTML = ''; // clear old alerts
+            alertBox.innerHTML = '';
             
             const activeAlerts = evaluateAlerts(data);
             activeAlerts.forEach(alertText => {
                 const item = document.createElement('div');
-                // Colorize box based on warning levels
-                if (alertText.includes("🚨") || alertText.includes("⚠️")) {
-                    item.className = "alert-item alert-danger";
-                } else {
-                    item.className = "alert-item alert-clear";
-                }
+                item.className = (alertText.includes("🚨") || alertText.includes("⚠️")) ? "alert-item alert-danger" : "alert-item alert-clear";
                 item.innerText = alertText;
                 alertBox.appendChild(item);
             });
+
+            // Re-arm the loop sequence every time metric updates hit completion successfully
+            setupAutoRefresh();
         }
 
-        // Master fetch function to grab core Open-Meteo payload variables
         async function fetchWeatherData(lat, lon, locationLabel) {
             updateStatus("Processing Grid Stream...", true);
             try {
+                // Save configurations in memory state
+                lastCoordinates = { lat, lon, label: locationLabel };
+
                 const queryUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=ms`;
                 const response = await fetch(queryUrl);
-                
-                if (!response.ok) throw new Error("Data transmission failure.");
+                if (!response.ok) throw new Error();
                 const parsedJson = await response.json();
                 
                 renderMetrics(parsedJson.current, locationLabel);
                 updateStatus("Scan Verified");
             } catch (err) {
                 updateStatus("API Processing Error");
-                alert("Could not load weather database stream. Check your network or connection.");
+                alert("Could not load weather database stream.");
             }
         }
 
-        // MODULE 1: Local Scan Activation
         function runLocalScan() {
+            currentMode = 'local';
             updateStatus("Awaiting GPS Clearance...", true);
             if (!navigator.geolocation) {
                 alert("Your current device interface does not support standard geolocation protocols.");
@@ -505,46 +549,49 @@
                 },
                 (err) => {
                     updateStatus("Access Denied");
-                    alert("Location request was rejected. Please permit tracking or rely on manual override searches.");
+                    alert("Location request was rejected. Switch to global scanning or manual query override mode.");
                 }
             );
         }
 
-        // MODULE 2: Global Sweeper Activation
         function runGlobalScan() {
+            currentMode = 'global';
             const index = Math.floor(Math.random() * globalZones.length);
             const selection = globalZones[index];
             fetchWeatherData(selection.lat, selection.lon, selection.name);
         }
 
-        // MODULE 3: Custom Named Query Target Execution
         async function runTargetScan() {
+            currentMode = 'custom';
             const rawInput = document.getElementById('targetInput').value.trim();
             if (!rawInput) {
-                alert("Input prompt is blank. Please specify a physical target name (e.g., Paris).");
+                alert("Input prompt is blank. Please specify a physical target name.");
                 return;
             }
 
             updateStatus("Resolving Directory...", true);
             try {
-                // Safely translate structural place names to actual geographic coordinates
                 const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawInput)}&count=1&language=en&format=json`;
                 const geoResponse = await fetch(geoUrl);
                 const geoData = await geoResponse.json();
 
                 if (!geoData.results || geoData.results.length === 0) {
                     updateStatus("Unknown Coordinates");
-                    alert(`Could not find coordinates for "${rawInput}". Please check spelling and try again.`);
+                    alert(`Could not find coordinates for "${rawInput}".`);
                     return;
                 }
 
                 const resolvedTarget = geoData.results[0];
                 const cleanLabel = `${resolvedTarget.name}, ${resolvedTarget.country || 'Global Sector'}`;
-                
                 fetchWeatherData(resolvedTarget.latitude, resolvedTarget.longitude, cleanLabel);
             } catch (err) {
                 updateStatus("Resolution Error");
-                alert("Failed to access geographic coordinate registry.");
+            }
+        }
+
+        function triggerSimUpdate() {
+            if (activeCache) {
+                renderMetrics(activeCache, lastCoordinates.label);
             }
         }
     </script>
