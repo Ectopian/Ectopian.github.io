@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL WEATHER MONITOR v2.2</title>
+    <title>TACTICAL EMERGENCY ALERT SCANNER</title>
     <style>
         :root {
             --bg-color: #0b0f19;
             --card-bg: #141b2d;
             --accent-cyan: #00f0ff;
             --accent-green: #00ff66;
+            --accent-yellow: #ffcc00;
             --alert-red: #ff0055;
             --text-main: #ffffff;
             --text-muted: #8fa0dd;
@@ -57,7 +58,6 @@
             font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: 1px;
-            color: var(--text-main);
         }
 
         .status-container {
@@ -73,6 +73,7 @@
             font-size: 0.85rem;
             font-weight: bold;
             border: 1px solid var(--accent-green);
+            transition: all 0.2s ease;
         }
 
         .timer-badge {
@@ -85,69 +86,55 @@
             border: 1px solid var(--accent-cyan);
         }
 
+        /* Tabs Interface styling */
+        .tabs-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(143, 160, 221, 0.3);
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            flex-grow: 1;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-cyan);
+            color: #000;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Core Content Layout */
         .layout-grid {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: 1fr;
             gap: 25px;
         }
 
-        @media (max-width: 768px) {
-            .layout-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .control-column {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
         .control-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(143, 160, 221, 0.2);
             padding: 20px;
             border-radius: 6px;
         }
 
-        .control-card h3 {
-            font-size: 1.05rem;
-            margin-bottom: 8px;
-            color: var(--accent-cyan);
-        }
-
-        .control-card p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-
-        .btn {
-            background: var(--accent-cyan);
-            color: #000000;
-            border: none;
-            padding: 12px 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            transition: background 0.2s ease, transform 0.1s ease;
-        }
-
-        .btn:hover {
-            background: #00bcd4;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
         .input-group {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
 
         .text-input {
@@ -156,8 +143,8 @@
             color: #fff;
             padding: 12px;
             border-radius: 4px;
-            flex-grow: 1;
             font-size: 0.9rem;
+            width: 150px;
         }
 
         .text-input:focus {
@@ -165,425 +152,315 @@
             border-color: var(--accent-cyan);
         }
 
-        .example-hint {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-            display: block;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 6px;
-            border-left: 3px solid var(--accent-cyan);
-        }
-
-        .sim-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 5px;
-        }
-
-        .display-column {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .panel-header {
-            font-size: 0.95rem;
+        .btn {
+            background: var(--accent-cyan);
+            color: #000000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.9rem;
             font-weight: bold;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .alert-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            padding: 20px;
-            min-height: 80px;
-        }
-
-        .alert-item {
-            padding: 12px;
             border-radius: 4px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            line-height: 1.4;
+            cursor: pointer;
+            text-transform: uppercase;
         }
 
-        .alert-item:last-child {
-            margin-bottom: 0;
+        .btn:hover {
+            background: #00bcd4;
         }
 
-        .alert-clear {
-            background: rgba(0, 255, 102, 0.1);
-            border: 1px solid var(--accent-green);
-            color: var(--accent-green);
-            text-align: center;
-        }
-
-        .alert-danger {
-            background: rgba(255, 0, 85, 0.15);
-            border: 1px solid var(--alert-red);
-            color: #ff4d88;
-            animation: pulse-border 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-border {
-            0%, 100% { border-color: var(--alert-red); }
-            50% { border-color: #ff99bb; }
-        }
-
-        .metrics-box {
+        /* Feed Windows styling */
+        .feed-container {
             background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(143, 160, 221, 0.2);
+            border: 1px solid rgba(143, 160, 221, 0.3);
             border-radius: 6px;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            min-height: 200px;
+            max-height: 450px;
+            overflow-y: auto;
         }
 
-        .location-title {
-            font-size: 1.3rem;
+        .hidden {
+            display: none !important;
+        }
+
+        .scanning-text {
+            color: var(--accent-yellow);
             font-weight: bold;
-            color: #fff;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 8px;
+            letter-spacing: 1px;
+            animation: pulse-scan 1s infinite ease-in-out;
         }
 
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .metric-card {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 12px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .metric-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .metric-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent-cyan);
-        }
-
-        .status-text {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-top: 5px;
+        @keyframes pulse-scan {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+    <div class="dashboard" id="screen-emergency">
         <header>
-            <h1>TACTICAL WEATHER ALERT CENTER</h1>
+            <h1>LIVE HAZARD RADAR</h1>
             <div class="status-container">
-                <div class="timer-badge" id="syncTimer">AUTO-REFRESH: INACTIVE</div>
+                <div class="timer-badge" id="syncTimer">AUTO-REFRESH: 10s</div>
                 <div class="status-badge" id="systemStatus">STATUS: READY</div>
             </div>
         </header>
 
+        <div class="tabs-header">
+            <button class="tab-btn" id="tab-local-btn" onclick="window.emergency.switchTab(0)">[01] Local Perimeter</button>
+            <button class="tab-btn" id="tab-global-btn" onclick="window.emergency.switchTab(1)">[02] Global Disaster Feed</button>
+            <button class="tab-btn" id="tab-broad-btn" onclick="window.emergency.switchTab(2)">[03] Regional Override</button>
+        </div>
+
         <div class="layout-grid">
-            <div class="control-column">
+            
+            <div id="tab-content-0" class="tab-content control-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>GPS Satellite Tracking Feed</h3>
+                    <button class="btn" onclick="window.emergency.scanLocal()">Force Manual Rescan</button>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Checks the US National Weather Service matrix directly over your active GPS coordinates.</p>
+                <div class="feed-container" id="local-alert-feed">
+                    Awaiting authorization uplink... click standard tracking tabs or scan above.
+                </div>
+            </div>
+
+            <div id="tab-content-1" class="tab-content control-card hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>GDACS Transnational System Feed</h3>
+                    <button class="btn" style="background:#9d4edd; color:white;" onclick="window.emergency.fetchFeed()">Force Global Rescan</button>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Monitors global earthquakes, tropical cyclones, floods, and volcano updates from international networks.</p>
+                <div class="feed-container" id="emergency-feed">
+                    Awaiting global telemetry stream link...
+                </div>
+            </div>
+
+            <div id="tab-content-2" class="tab-content control-card hidden">
+                <h3>Regional Target Manual Override</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Type a standard US state code below to intercept nationwide hazardous weather records.</p>
                 
-                <div class="control-card">
-                    <h3>[01] Local Perimeter Scan</h3>
-                    <p>Uses browser GPS tracking to check for active severe weather warnings directly over your current area.</p>
-                    <button class="btn" onclick="runLocalScan()">Scan Local Area</button>
+                <div class="input-group">
+                    <input type="text" id="broad-state" class="text-input" placeholder="e.g. TX, OK, FL" maxlength="2">
+                    <button class="btn" onclick="window.emergency.scanBroad()">Execute Target Scan</button>
                 </div>
 
-                <div class="control-card">
-                    <h3>[02] Global Region Sweep</h3>
-                    <p>Scans alternate global weather grids completely outside your local tracking zone.</p>
-                    <button class="btn" style="background: #9d4edd; color: white;" onclick="runGlobalScan()">Scan Random Global Target</button>
-                </div>
-
-                <div class="control-card">
-                    <h3>[03] Custom Target Query</h3>
-                    <p>Manually type a town, city, or country below to analyze its coordinates for hazardous conditions.</p>
-                    <div class="input-group">
-                        <input type="text" id="targetInput" class="text-input" placeholder="Enter town or city name...">
-                        <button class="btn" style="width: auto; padding: 0 20px;" onclick="runTargetScan()">Query</button>
-                    </div>
-                    <div class="example-hint">
-                        💡 <strong>Correct Examples:</strong> "Miami", "Oklahoma City", "Tokyo", "London"
-                    </div>
-                </div>
-
-                <div class="control-card" style="border-color: rgba(255, 0, 85, 0.3);">
-                    <h3>[Developer Tools] Warning Simulator</h3>
-                    <p>Force the scanner to fake a hazardous climate profile so you can instantly verify alert visuals.</p>
-                    <div class="sim-container">
-                        <input type="checkbox" id="simCheckbox" style="transform: scale(1.3); cursor: pointer;" onchange="triggerSimUpdate()">
-                        <label for="simCheckbox" style="font-size: 0.85rem; color: #ff4d88; font-weight: bold; cursor: pointer;">
-                            Simulate Active Severe Tornado/Storm Pattern
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="display-column">
-                <div>
-                    <div class="panel-header">🚨 Active Hazard Advisories &amp; Warnings</div>
-                    <div class="alert-box" id="alertBox">
-                        <div class="alert-item alert-clear">No location loaded. Initiate a scan grid on the left.</div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="panel-header">📊 Atmospheric Metrics Grid</div>
-                    <div class="metrics-box">
-                        <div class="location-title" id="displayLocation">Target: Awaiting Grid Input</div>
-                        
-                        <div class="metrics-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">Temperature</div>
-                                <div class="metric-value" id="valTemp">--</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">RealFeel Index</div>
-                                <div class="metric-value" id="valApparent">--</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Relative Humidity</div>
-                                <div class="metric-value" id="valHumidity">--</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Wind Velocity</div>
-                                <div class="metric-value" id="valWind">--</div>
-                            </div>
-                        </div>
-
-                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                            <div class="metric-label">General Condition Status</div>
-                            <div class="status-text" id="valCondition">Awaiting data hook...</div>
-                        </div>
-                    </div>
+                <div class="feed-container" id="broad-alert-feed">
+                    Awaiting specific sector input criteria...
                 </div>
             </div>
+
         </div>
     </div>
 
     <script>
-        let currentMode = null; 
-        let lastCoordinates = { lat: null, lon: null, label: "" };
-        let refreshTimer = null;
-        let countdownInterval = null;
-        let secondsRemaining = 10; // Set up a quick 10-second loop interval
+        // ================================================================
+        // EMERGENCY FEED SYSTEM
+        // ================================================================
+        window.emergency = {
+            currentTab: 0,
+            refreshTimer: null,
+            countdownInterval: null,
+            secondsRemaining: 10,
 
-        function getWeatherDescription(code) {
-            if (code === 0) return "Clear Skies";
-            if ([1, 2, 3].includes(code)) return "Partly Cloudy / Overcast";
-            if ([45, 48].includes(code)) return "Dense Fog Shield";
-            if ([51, 53, 55, 61, 63, 65].includes(code)) return "Active Rain / Precipitation";
-            if ([71, 73, 75, 77, 85, 86].includes(code)) return "Snowfall Accumulation / Freezing Hazards";
-            if ([95, 96, 99].includes(code)) return "Severe Thunderstorm Matrix";
-            return "Unidentified Atmospheric Anomaly";
-        }
+            // Safe tab switcher
+            switchTab: function(tab) {
+                this.currentTab = tab;
+                document.querySelectorAll('.tab-content').forEach(el => el && el.classList.add('hidden'));
+                const activeTab = document.getElementById(`tab-content-${tab}`);
+                if (activeTab) activeTab.classList.remove('hidden');
 
-        const globalZones = [
-            { name: "Tokyo Sector, Japan", lat: 35.6762, lon: 139.6503 },
-            { name: "London Grid, United Kingdom", lat: 51.5074, lon: -0.1278 },
-            { name: "Cairo Nexus, Egypt", lat: 30.0444, lon: 31.2357 },
-            { name: "Sydney Hub, Australia", lat: -33.8688, lon: 151.2093 },
-            { name: "Reykjavik Frost-Zone, Iceland", lat: 64.1466, lon: -21.9426 },
-            { name: "Oklahoma Grid, USA", lat: 35.4676, lon: -97.5164 }
-        ];
+                document.querySelectorAll('#screen-emergency button[id^="tab-"]').forEach(b => b && b.classList.remove('active'));
+                const btn = document.getElementById(['tab-local-btn','tab-global-btn','tab-broad-btn'][tab]);
+                if (btn) btn.classList.add('active');
 
-        function updateStatus(text, isProcessing = false) {
-            const statusEl = document.getElementById('systemStatus');
-            statusEl.innerText = `STATUS: ${text.toUpperCase()}`;
-            statusEl.style.borderColor = isProcessing ? "var(--accent-cyan)" : "var(--accent-green)";
-            statusEl.style.color = isProcessing ? "var(--accent-cyan)" : "var(--accent-green)";
-        }
+                // Instantly execute the appropriate scan and refresh loops on swap
+                this.executeActiveScan();
+            },
 
-        function startCountdown() {
-            clearInterval(countdownInterval);
-            secondsRemaining = 10; // Reset visual counter precisely to 10 seconds
-            
-            countdownInterval = setInterval(() => {
-                secondsRemaining--;
-                document.getElementById('syncTimer').innerText = `AUTO-REFRESH: ${secondsRemaining}s`;
+            // Visual tracking engine to let the user see it's actively scanning
+            setScanningState: function(elementId, message) {
+                const feed = document.getElementById(elementId);
+                if (feed) {
+                    feed.innerHTML = `<span class="scanning-text">🔄 [SCANNING IN PROGRESS] ${message}...</span>`;
+                }
                 
-                if (secondsRemaining <= 0) {
-                    clearInterval(countdownInterval);
+                // Flash the main dashboard status badge to show activity
+                const statusBadge = document.getElementById('systemStatus');
+                if (statusBadge) {
+                    statusBadge.innerText = "STATUS: SCANNING";
+                    statusBadge.style.borderColor = "var(--accent-yellow)";
+                    statusBadge.style.color = "var(--accent-yellow)";
                 }
-            }, 1000);
-        }
+            },
 
-        function setupAutoRefresh() {
-            clearTimeout(refreshTimer);
-            startCountdown();
-            
-            refreshTimer = setTimeout(() => {
-                if (currentMode === 'local') {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            lastCoordinates.lat = pos.coords.latitude;
-                            lastCoordinates.lon = pos.coords.longitude;
-                            fetchWeatherData(lastCoordinates.lat, lastCoordinates.lon, lastCoordinates.label);
-                        },
-                        () => { updateStatus("Refresh Blocked"); }
-                    );
-                } else if (lastCoordinates.lat && lastCoordinates.lon) {
-                    fetchWeatherData(lastCoordinates.lat, lastCoordinates.lon, lastCoordinates.label);
+            resetStatusBadge: function() {
+                const statusBadge = document.getElementById('systemStatus');
+                if (statusBadge) {
+                    statusBadge.innerText = "STATUS: COMPLETED";
+                    statusBadge.style.borderColor = "var(--accent-green)";
+                    statusBadge.style.color = "var(--accent-green)";
                 }
-            }, 10000); // Fired exactly on a 10000ms loop hook
-        }
+            },
 
-        function evaluateAlerts(currentData) {
-            const alerts = [];
-            if (document.getElementById('simCheckbox').checked) {
-                alerts.push("🚨 TORNADO WARNING: High-velocity atmospheric rotation vectors and severe hook echoes detected. Take structural shelter immediately!");
-                alerts.push("⚠️ SEVERE THUNDERSTORM WARNING: Intrusive electrical discharges and destructive hail hazards active in the area.");
-                alerts.push("⚠️ FLASH FLOOD WARNING: Excess precipitation exceeds safe drainage infrastructure capacities.");
-                return alerts;
-            }
+            // Triggers the correct scanning logic depending on what tab is active
+            executeActiveScan: function() {
+                if (this.currentTab === 0) this.scanLocal();
+                if (this.currentTab === 1) this.fetchFeed();
+                if (this.currentTab === 2) this.scanBroad();
+            },
 
-            const code = currentData.weather_code;
-            const wind = currentData.wind_speed_10m;
+            // 10-Second Visual Timer Engine
+            startCountdown: function() {
+                clearInterval(this.countdownInterval);
+                this.secondsRemaining = 10;
+                const timerBadge = document.getElementById('syncTimer');
+                if (timerBadge) timerBadge.innerText = `AUTO-REFRESH: ${this.secondsRemaining}s`;
 
-            if ([95, 96, 99].includes(code)) {
-                alerts.push("⚠️ SEVERE THUNDERSTORM WARNING: Dangerous lightning arrays and severe localized cell structures active.");
-                if (wind > 16) {
-                    alerts.push("🚨 TORNADO WARNING: Destructive wind shear and violent rotational updrafts present. Seek interior shelter.");
-                }
-            }
-            if (wind >= 18) {
-                alerts.push(`⚠️ HIGH WIND WARNING: Damaging winds occurring at ${wind} m/s. Secure outdoor structural assets.`);
-                if (wind >= 24) {
-                    alerts.push("🚨 TORNADO WARNING: Catastrophic structural wind stress thresholds breached.");
-                }
-            }
-            if ([65, 82].includes(code)) {
-                alerts.push("⚠️ FLASH FLOOD WARNING: Rapid, torrential rain accumulation detected. Avoid low-lying sectors.");
-            }
-            if (alerts.length === 0) {
-                alerts.push("✅ NO ACTIVE SEVERE WEATHER WARNINGS OR HAZARDS FOUND FOR THIS ZONE.");
-            }
-            return alerts;
-        }
+                this.countdownInterval = setInterval(() => {
+                    this.secondsRemaining--;
+                    if (timerBadge) timerBadge.innerText = `AUTO-REFRESH: ${this.secondsRemaining}s`;
+                    
+                    if (this.secondsRemaining <= 0) {
+                        clearInterval(this.countdownInterval);
+                    }
+                }, 1000);
+            },
 
-        let activeCache = null;
+            // Automated loop handler resetting every 10 seconds
+            setupAutoRefresh: function() {
+                clearTimeout(this.refreshTimer);
+                this.startCountdown();
 
-        function renderMetrics(data, locationName) {
-            activeCache = data;
-            document.getElementById('displayLocation').innerText = `Target Grid: ${locationName}`;
-            document.getElementById('valTemp').innerText = `${data.temperature_2m}°C`;
-            document.getElementById('valApparent').innerText = `${data.apparent_temperature}°C`;
-            document.getElementById('valHumidity').innerText = `${data.relative_humidity_2m}%`;
-            document.getElementById('valWind').innerText = `${data.wind_speed_10m} m/s`;
-            document.getElementById('valCondition').innerText = getWeatherDescription(data.weather_code);
+                this.refreshTimer = setTimeout(() => {
+                    this.executeActiveScan();
+                }, 10000);
+            },
 
-            const alertBox = document.getElementById('alertBox');
-            alertBox.innerHTML = '';
-            
-            const activeAlerts = evaluateAlerts(data);
-            activeAlerts.forEach(alertText => {
-                const item = document.createElement('div');
-                item.className = (alertText.includes("🚨") || alertText.includes("⚠️")) ? "alert-item alert-danger" : "alert-item alert-clear";
-                item.innerText = alertText;
-                alertBox.appendChild(item);
-            });
-
-            setupAutoRefresh();
-        }
-
-        async function fetchWeatherData(lat, lon, locationLabel) {
-            updateStatus("Processing Grid Stream...", true);
-            try {
-                lastCoordinates = { lat, lon, label: locationLabel };
-
-                const queryUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=ms`;
-                const response = await fetch(queryUrl);
-                if (!response.ok) throw new Error();
-                const parsedJson = await response.json();
+            // LOCAL SCANNER (Uses live NWS server alerts data)
+            scanLocal: function() {
+                const feed = document.getElementById('local-alert-feed');
+                if (!feed) return;
                 
-                renderMetrics(parsedJson.current, locationLabel);
-                updateStatus("Scan Verified");
-            } catch (err) {
-                updateStatus("API Processing Error");
-                alert("Could not load weather database stream.");
-            }
-        }
-
-        function runLocalScan() {
-            currentMode = 'local';
-            updateStatus("Awaiting GPS Clearance...", true);
-            if (!navigator.geolocation) {
-                alert("Your current device interface does not support standard geolocation protocols.");
-                updateStatus("GPS Error");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    fetchWeatherData(pos.coords.latitude, pos.coords.longitude, "Your Tracked Local Position");
-                },
-                (err) => {
-                    updateStatus("Access Denied");
-                    alert("Location request was rejected. Switch to global scanning or manual query override mode.");
-                }
-            );
-        }
-
-        function runGlobalScan() {
-            currentMode = 'global';
-            const index = Math.floor(Math.random() * globalZones.length);
-            const selection = globalZones[index];
-            fetchWeatherData(selection.lat, selection.lon, selection.name);
-        }
-
-        async function runTargetScan() {
-            currentMode = 'custom';
-            const rawInput = document.getElementById('targetInput').value.trim();
-            if (!rawInput) {
-                alert("Input prompt is blank. Please specify a physical target name.");
-                return;
-            }
-
-            updateStatus("Resolving Directory...", true);
-            try {
-                const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawInput)}&count=1&language=en&format=json`;
-                const geoResponse = await fetch(geoUrl);
-                const geoData = await geoResponse.json();
-
-                if (!geoData.results || geoData.results.length === 0) {
-                    updateStatus("Unknown Coordinates");
-                    alert(`Could not find coordinates for "${rawInput}".`);
+                window.emergency.setScanningState('local-alert-feed', 'Perimeter GPS Coordinates');
+                
+                if (!navigator.geolocation) {
+                    feed.innerHTML = "Geolocation not supported by host window.";
                     return;
                 }
+                
+                // Add a small 300ms artificial timeout delay so the user explicitly sees the screen flash "SCANNING"
+                setTimeout(() => {
+                    navigator.geolocation.getCurrentPosition(async (pos) => {
+                        try {
+                            const res = await fetch(`https://api.weather.gov/alerts/active?point=${pos.coords.latitude},${pos.coords.longitude}`);
+                            const data = await res.json();
+                            
+                            window.emergency.resetStatusBadge();
+                            
+                            if (!data.features || data.features.length === 0) {
+                                feed.innerHTML = "<strong style='color:#00ff66'>✅ NO ACTIVE THREATS OR SEVERE WEATHER ALERT FILES FOUND FOR YOUR GPS AXIS</strong>";
+                                window.emergency.setupAutoRefresh();
+                                return;
+                            }
+                            let html = "<strong>⚠️ ACTIVE ALERTS IN YOUR COORDINATE SECTOR:</strong><br>";
+                            data.features.forEach(f => {
+                                const p = f.properties;
+                                html += `<div style="margin:10px 0; padding:10px; border-left:4px solid var(--alert-red); background:rgba(255,0,85,0.05); font-size:0.95rem;">
+                                            <b style="color:var(--alert-red);">${p.event}</b><br>
+                                            <span style="color:#fff;">${p.headline || p.description}</span>
+                                         </div>`;
+                            });
+                            feed.innerHTML = html;
+                        } catch(e) { 
+                            feed.innerHTML = "Uplink data synchronization matrix failed."; 
+                        }
+                        window.emergency.setupAutoRefresh();
+                    }, (err) => {
+                        feed.innerHTML = "GPS Clearance Denied. Enable location options to track local risks.";
+                        window.emergency.setupAutoRefresh();
+                    });
+                }, 300);
+            },
 
-                const resolvedTarget = geoData.results[0];
-                const cleanLabel = `${resolvedTarget.name}, ${resolvedTarget.country || 'Global Sector'}`;
-                fetchWeatherData(resolvedTarget.latitude, resolvedTarget.longitude, cleanLabel);
-            } catch (err) {
-                updateStatus("Resolution Error");
-            }
-        }
+            // GLOBAL FEED (GDACS international hazard stream parsed to JSON)
+            fetchFeed: async function() {
+                const feed = document.getElementById('emergency-feed');
+                if (!feed) return;
+                
+                window.emergency.setScanningState('emergency-feed', 'GDACS International Matrix');
+                
+                setTimeout(async () => {
+                    try {
+                        const r = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.gdacs.org%2Fxml%2Frss.xml");
+                        const json = await r.json();
+                        
+                        window.emergency.resetStatusBadge();
+                        
+                        let html = "";
+                        json.items.forEach(i => {
+                            html += `<div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed rgba(255,255,255,0.1);">
+                                        <strong style="color:var(--accent-cyan); font-size:1rem;">${i.title}</strong><br>
+                                        <small style="color:var(--text-main); line-height:1.4; display:block; margin-top:4px;">${i.description}</small>
+                                     </div>`;
+                        });
+                        feed.innerHTML = html || "No active global alerts found.";
+                    } catch(e) { 
+                        feed.innerHTML = "Global telemetry feed unavailable at this time."; 
+                    }
+                    window.emergency.setupAutoRefresh();
+                }, 300);
+            },
 
-        function triggerSimUpdate() {
-            if (activeCache) {
-                renderMetrics(activeCache, lastCoordinates.label);
+            // BROAD SCANNER (Nationwide / specific state data metrics override)
+            scanBroad: async function() {
+                const feed = document.getElementById('broad-alert-feed');
+                const state = (document.getElementById('broad-state').value || "").trim().toUpperCase();
+                if (!feed) return;
+                
+                window.emergency.setScanningState('broad-alert-feed', state ? `Sector Grid [${state}]` : 'All Continental Sectors');
+                
+                setTimeout(async () => {
+                    try {
+                        let url = "https://api.weather.gov/alerts/active?status=actual";
+                        if (state) url += `&area=${state}`;
+                        
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        
+                        window.emergency.resetStatusBadge();
+                        
+                        if (!data.features || data.features.length === 0) {
+                            feed.innerHTML = `<strong style='color:#00ff66'>NO ACTIVE CRITICAL RISK EVENTS DETECTED IN ${state || "NATIONWIDE"} MATRIX</strong>`;
+                            window.emergency.setupAutoRefresh();
+                            return;
+                        }
+                        let html = `<strong>⚠️ ACTIVE CRITICAL ISSUES COUNTER (${data.features.length}):</strong><br>`;
+                        data.features.forEach(f => {
+                            const p = f.properties;
+                            html += `<div style="margin:8px 0; padding:8px; border-left:3px solid var(--accent-yellow); background:rgba(255,204,0,0.03); font-size:0.9rem;">
+                                        <b style="color:var(--accent-yellow);">${p.event}</b> — <span style="color:var(--text-muted);">${p.areaDesc || 'Multiple areas'}</span>
+                                     </div>`;
+                        });
+                        feed.innerHTML = html;
+                    } catch(e) { 
+                        feed.innerHTML = "Broad regional matrix scan failed to return packets."; 
+                    }
+                    window.emergency.setupAutoRefresh();
+                }, 300);
+            },
+
+            init: function() {
+                this.switchTab(0);
+                console.log("Emergency system initialized safely");
             }
-        }
+        };
+
+        // Bootstrap application setup loop on load parameters
+        window.onload = function() {
+            window.emergency.init();
+        };
     </script>
 </body>
 </html>
