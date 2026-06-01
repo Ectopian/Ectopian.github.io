@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL WEATHER MONITOR v2.1</title>
+    <title>TACTICAL WEATHER MONITOR v2.2</title>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -382,12 +382,11 @@
     </div>
 
     <script>
-        // Track the current operational context so background refreshes know what to scan
-        let currentMode = null; // 'local', 'global', or 'custom'
+        let currentMode = null; 
         let lastCoordinates = { lat: null, lon: null, label: "" };
         let refreshTimer = null;
         let countdownInterval = null;
-        let secondsRemaining = 600; // 10 minutes in seconds
+        let secondsRemaining = 10; // Set up a quick 10-second loop interval
 
         function getWeatherDescription(code) {
             if (code === 0) return "Clear Skies";
@@ -415,16 +414,13 @@
             statusEl.style.color = isProcessing ? "var(--accent-cyan)" : "var(--accent-green)";
         }
 
-        // Handles counting down the 10-minute timer visually
         function startCountdown() {
             clearInterval(countdownInterval);
-            secondsRemaining = 600; 
+            secondsRemaining = 10; // Reset visual counter precisely to 10 seconds
             
             countdownInterval = setInterval(() => {
                 secondsRemaining--;
-                const mins = Math.floor(secondsRemaining / 60);
-                const secs = secondsRemaining % 60;
-                document.getElementById('syncTimer').innerText = `AUTO-REFRESH: ${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+                document.getElementById('syncTimer').innerText = `AUTO-REFRESH: ${secondsRemaining}s`;
                 
                 if (secondsRemaining <= 0) {
                     clearInterval(countdownInterval);
@@ -432,14 +428,12 @@
             }, 1000);
         }
 
-        // Sets up the actual 10-minute loop cycle
         function setupAutoRefresh() {
             clearTimeout(refreshTimer);
             startCountdown();
             
             refreshTimer = setTimeout(() => {
                 if (currentMode === 'local') {
-                    // Re-request GPS to confirm it's still allowed and position hasn't shifted
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
                             lastCoordinates.lat = pos.coords.latitude;
@@ -449,10 +443,9 @@
                         () => { updateStatus("Refresh Blocked"); }
                     );
                 } else if (lastCoordinates.lat && lastCoordinates.lon) {
-                    // For global or custom queries, refresh using saved coordinates
                     fetchWeatherData(lastCoordinates.lat, lastCoordinates.lon, lastCoordinates.label);
                 }
-            }, 600000); // 10 minutes standard execution window
+            }, 10000); // Fired exactly on a 10000ms loop hook
         }
 
         function evaluateAlerts(currentData) {
@@ -488,7 +481,6 @@
             return alerts;
         }
 
-        // Cache the last data chunk loaded globally to toggle simulations fluidly
         let activeCache = null;
 
         function renderMetrics(data, locationName) {
@@ -511,14 +503,12 @@
                 alertBox.appendChild(item);
             });
 
-            // Re-arm the loop sequence every time metric updates hit completion successfully
             setupAutoRefresh();
         }
 
         async function fetchWeatherData(lat, lon, locationLabel) {
             updateStatus("Processing Grid Stream...", true);
             try {
-                // Save configurations in memory state
                 lastCoordinates = { lat, lon, label: locationLabel };
 
                 const queryUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=ms`;
